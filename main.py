@@ -103,7 +103,7 @@ def add_user(
     user_id: str,
     email: str,
     user_name: str,
-    user_last_name: str,
+    user_lastname: str,
     user_collection: object,
 ):
     """
@@ -116,7 +116,7 @@ def add_user(
       user_collection.add_user() returns False).
     - Otherwise, it returns True.
     """
-    new_user = user_collection.add_user(user_id, email, user_name, user_last_name)
+    new_user = user_collection.add_user(user_id, email, user_name, user_lastname)
     return new_user
 
 
@@ -124,7 +124,7 @@ def update_user(
     user_id: str,
     email: str,
     user_name: str,
-    user_last_name: str,
+    user_lastname: str,
     user_collection: object,
 ):
     """
@@ -134,9 +134,7 @@ def update_user(
     - Returns False if there any errors.
     - Otherwise, it returns True.
     """
-    updated_user = user_collection.modify_user(
-        user_id, email, user_name, user_last_name
-    )
+    updated_user = user_collection.modify_user(user_id, email, user_name, user_lastname)
     return updated_user
 
 

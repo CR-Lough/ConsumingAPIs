@@ -19,17 +19,19 @@ class UserCollection:
         self.database = {}
 
     @logger.catch(message="error in UserCollection.add_user() method")
-    def add_user(self, user_id: str, email: str, user_name: str, user_last_name: str):
+    def add_user(self, user_id: str, email: str, user_name: str, user_lastname: str):
         """
         Adds a new user to the database
         """
         try:
             db = main.get_database()
             db.users.insert_one(
-                {"user_id": user_id},
-                {"name": user_name},
-                {"last_name": user_last_name},
-                {"email": user_last_name},
+                {
+                    "user_id": user_id,
+                    "name": user_name,
+                    "lastname": user_lastname,
+                    "email": email,
+                },
             )
             return True
         except NameError:
@@ -37,9 +39,7 @@ class UserCollection:
             return False
 
     @logger.catch(message="error in UserCollection.modify_user() method")
-    def modify_user(
-        self, user_id: str, email: str, user_name: str, user_last_name: str
-    ):
+    def modify_user(self, user_id: str, email: str, user_name: str, user_lastname: str):
         """
         Modifies an existing user
         """
@@ -48,14 +48,17 @@ class UserCollection:
             row = db.users.find_one({"user_id": user_id})
             print("Found document:")
             pprint(row)
-            result = db.users.update_one(
+            result = db.users.replace_one(
                 {"_id": row.get("_id")},
-                {"user_id": user_id},
-                {"name": user_name},
-                {"last_name": user_last_name},
-                {"email": user_last_name},
+                {
+                    "user_id": user_id,
+                    "name": user_name,
+                    "lastname": user_lastname,
+                    "email": email,
+                },
             )
             print("document updated to:")
+            result = db.users.find_one({"user_id": user_id})
             pprint(result)
             return result
         except NameError:

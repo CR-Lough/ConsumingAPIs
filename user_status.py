@@ -26,9 +26,11 @@ class UserStatusCollection:
         try:
             db = main.get_database()
             db.users.insert_one(
-                {"status_id": status_id},
-                {"user_id": user_id},
-                {"status_text": status_text},
+                {
+                    "status_id": status_id,
+                    "user_id": user_id,
+                    "status_text": status_text,
+                },
             )
             return True
         except NameError:
@@ -47,13 +49,16 @@ class UserStatusCollection:
             row = db.users.find_one({"status_id": status_id})
             print("Found document:")
             pprint(row)
-            result = db.users.update_one(
+            result = db.users.replace_one(
                 {"_id": row.get("_id")},
-                {"status_id": status_id},
-                {"user_id": user_id},
-                {"status_text": status_text},
+                {
+                    "status_id": status_id,
+                    "user_id": user_id,
+                    "status_text": status_text,
+                },
             )
             print("document updated to:")
+            result = db.users.find_one({"status_id": status_id})
             pprint(result)
             return result
         except NameError:

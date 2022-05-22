@@ -8,6 +8,7 @@ import main
 from peewee import *
 from cerberus import Validator
 from loguru import logger
+from pprint import pprint
 import pysnooper
 
 logger.add("out_{time:YYYY.MM.DD}.log", backtrace=True, diagnose=True)
@@ -36,7 +37,7 @@ def add_user():
     """
     Adds a new user into the database
     """
-    user_schema = user_schema()
+    user_schema = _user_schema()
     while (
         v.validate({"user_id": (user_id := input("User ID: "))}, user_schema) is False
     ):
@@ -49,12 +50,12 @@ def add_user():
         print(v.errors)
     while (
         v.validate(
-            {"last_name": (user_last_name := input("User last name: "))}, user_schema
+            {"lastname": (user_lastname := input("User last name: "))}, user_schema
         )
         is False
     ):
         print(v.errors)
-    if not main.add_user(user_id, email, user_name, user_last_name, user_collection):
+    if not main.add_user(user_id, email, user_name, user_lastname, user_collection):
         print("An error occurred while trying to add new user")
     else:
         print("User was successfully added")
@@ -65,7 +66,7 @@ def update_user():
     """
     Updates information for an existing user
     """
-    user_schema = user_schema()
+    user_schema = _user_schema()
     while (
         v.validate({"user_id": (user_id := input("User ID: "))}, user_schema) is False
     ):
@@ -78,13 +79,13 @@ def update_user():
         print(v.errors)
     while (
         v.validate(
-            {"last_name": (user_last_name := input("User last name: "))}, user_schema
+            {"lastname": (user_lastname := input("User last name: "))}, user_schema
         )
         is False
     ):
         print(v.errors)
     # try:
-    if not main.update_user(user_id, email, user_name, user_last_name, user_collection):
+    if not main.update_user(user_id, email, user_name, user_lastname, user_collection):
         print("An error occurred while trying to update user")
     else:
         print("User was successfully updated")
@@ -98,7 +99,7 @@ def search_user():
     """
     Searches a user in the database
     """
-    user_schema = user_schema()
+    user_schema = _user_schema()
     while (
         v.validate({"user_id": (user_id := input("User ID: "))}, user_schema) is False
     ):
@@ -108,10 +109,7 @@ def search_user():
     if not result:
         print("ERROR: User does not exist")
     else:
-        print(f"User ID: {result.user_id}")
-        print(f"Email: {result.user_email}")
-        print(f"Name: {result.user_name}")
-        print(f"Last name: {result.user_last_name}")
+        pprint(result)
     # except AttributeError:
     #     logger.exception("NEW EXCEPTION")
     #     pass
@@ -122,7 +120,7 @@ def delete_user():
     """
     Deletes user from the database
     """
-    user_schema = user_schema()
+    user_schema = _user_schema()
     while (
         v.validate({"user_id": (user_id := input("User ID: "))}, user_schema) is False
     ):
@@ -139,7 +137,7 @@ def add_status():
     """
     Adds a new status into the database
     """
-    status_schema = status_schema()
+    status_schema = _status_schema()
     while (
         v.validate({"user_id": (user_id := input("User ID: "))}, status_schema) is False
     ):
@@ -167,7 +165,7 @@ def update_status():
     """
     Updates information for an existing status
     """
-    status_schema = status_schema()
+    status_schema = _status_schema()
     while (
         v.validate({"user_id": (user_id := input("User ID: "))}, status_schema) is False
     ):
@@ -195,7 +193,7 @@ def search_status():
     """
     Searches a status in the database
     """
-    status_schema = status_schema()
+    status_schema = _status_schema()
     while (
         v.validate(
             {"status_id": (status_id := input("Enter status ID to search: "))},
@@ -208,9 +206,7 @@ def search_status():
     if not result:
         print("ERROR: Status does not exist")
     else:
-        print(f"User ID: {result.user_id}")
-        print(f"Status ID: {result.status_id}")
-        print(f"Status text: {result.status_text}")
+        pprint(result)
 
 
 @pysnooper.snoop()
@@ -218,7 +214,7 @@ def delete_status():
     """
     Deletes status from the database
     """
-    status_schema = status_schema()
+    status_schema = _status_schema()
     while (
         v.validate(
             {"status_id": (status_id := input("Enter status ID to delete: "))},
@@ -234,16 +230,16 @@ def delete_status():
 
 
 @pysnooper.snoop()
-def user_schema():
-    user_schema = {
+def _user_schema():
+    _user_schema = {
         "user_id": {
-            "type": ["float", "integer"],
+            "type": "string",
             "min": 1,
             "max": 999,
             "empty": False,
         },
         "name": {"type": "string", "minlength": 1, "maxlength": 50, "empty": False},
-        "last_name": {
+        "lastname": {
             "type": "string",
             "minlength": 1,
             "maxlength": 100,
@@ -257,12 +253,12 @@ def user_schema():
             "empty": False,
         },
     }
-    return user_schema
+    return _user_schema
 
 
 @pysnooper.snoop()
-def status_schema():
-    status_schema = {
+def _status_schema():
+    _status_schema = {
         "status_id": {
             "type": "string",
             "min": 1,
@@ -282,7 +278,7 @@ def status_schema():
             "empty": False,
         },
     }
-    return status_schema
+    return _status_schema
 
 
 @pysnooper.snoop()
