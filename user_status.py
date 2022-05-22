@@ -2,8 +2,8 @@
 classes to manage the user status messages
 """
 # pylint: disable=R0903
-from sqlite3 import IntegrityError
-from sqlalchemy import create_engine
+from pprint import pprint
+import main
 from loguru import logger
 
 logger.add("out_{time:YYYY.MM.DD}.log", backtrace=True, diagnose=True)
@@ -24,12 +24,14 @@ class UserStatusCollection:
         add a new status message to the database
         """
         try:
-            new_status = socialnetwork_model.StatusTable(
-                status_id=status_id, user_id=user_id, status_text=status_text
+            db = main.get_database()
+            db.users.insert_one(
+                {"status_id": status_id},
+                {"user_id": user_id},
+                {"status_text": status_text},
             )
-            new_status.save()
             return True
-        except IntegrityError:
+        except NameError:
             logger.exception("NEW EXCEPTION")
             return False
 
@@ -41,15 +43,20 @@ class UserStatusCollection:
         The new user_id and status_text are assigned to the existing message
         """
         try:
-            row = socialnetwork_model.StatusTable.get(
-                socialnetwork_model.StatusTable.user_id == status_id
+            db = main.get_database()
+            row = db.users.find_one({"status_id": status_id})
+            print("Found document:")
+            pprint(row)
+            result = db.users.update_one(
+                {"_id": row.get("_id")},
+                {"status_id": status_id},
+                {"user_id": user_id},
+                {"status_text": status_text},
             )
-            row.user_id = user_id
-            row.status_text = status_text
-
-            row.save()
-            return True
-        except IntegrityError:
+            print("document updated to:")
+            pprint(result)
+            return result
+        except NameError:
             logger.exception("NEW EXCEPTION")
             return False
 
@@ -59,21 +66,14 @@ class UserStatusCollection:
         deletes the status message with id, status_id
         """
         try:
-            qry = socialnetwork_model.StatusTable.delete().where(
-                socialnetwork_model.StatusTable.status_id == status_id
-            )
-            qry.execute()
-            # query = (socialnetwork_model.StatusTable
-            #         .select(socialnetwork_model.StatusTable.status_id)
-            #         .join(socialnetwork_model.UsersTable)
-            #         .where(socialnetwork_model.StatusTable.status_id == status_id))
-            # # for row in query:
-            # #     temp_status_id = row.status_id
-            # # temp_status_id.delete_instance()
+            db = main.get_database()
+            row = db.users.find_one({"status_id": status_id})
+            db.users.delete_one(row)
 
-            # socialnetwork_model.StatusTable.delete().where(socialnetwork_model.StatusTable.status_id << query)
-            return True
-        except IntegrityError:
+            print("Deleted document:")
+            pprint(row)
+            return row
+        except NameError:
             logger.exception("NEW EXCEPTION")
             return False
 
@@ -85,46 +85,9 @@ class UserStatusCollection:
         Returns an empty UserStatus object if status_id does not exist
         """
         try:
-            # row = socialnetwork_model.StatusTable.get(socialnetwork_model.StatusTable.user_id==status_id)
-            query = (
-                socialnetwork_model.StatusTable.select(
-                    socialnetwork_model.StatusTable.user_id,
-                    socialnetwork_model.StatusTable.status_id,
-                    socialnetwork_model.StatusTable.status_text,
-                )
-                .join(socialnetwork_model.UsersTable)
-                .where(socialnetwork_model.StatusTable.status_id == status_id)
-            )
-            for row in query:
-                return row
-            # return status
-        except IntegrityError:
+            db = main.get_database()
+            row = db.users.find_one({"status_id": status_id})
+            return row
+        except NameError:
             logger.exception("NEW EXCEPTION")
             return False
-
-    def search_all_status_updates(self, user_id):
-        engine = create_engine("sqlite:///twitter.db", echo=True)
-        with engine.connect() as sqlite_connection:
-            execute = sqlite_connection.execute(
-                f"""
-                SELECT status_text 
-                FROM statustable 
-                WHERE user_id in ('{user_id}')
-            """
-            )
-            result = sorted([row[0] for row in execute])
-        return result
-
-    def filter_status_by_string(self, status_string):
-        engine = create_engine("sqlite:///twitter.db", echo=True)
-        with engine.connect() as sqlite_connection:
-            execute = sqlite_connection.execute(
-                f"""
-                SELECT STATUS_ID,USER_ID,STATUS_TEXT 
-                FROM statustable 
-                WHERE status_text like '%{status_string}%'
-            """
-            )
-            result = sorted([row for row in execute])
-            result = iter(result)
-        return result

@@ -25,6 +25,24 @@ def init_status_collection():
     return status
 
 
+def get_database():
+    from pymongo import MongoClient
+    import pymongo
+
+    # Provide the mongodb atlas url to connect python to mongodb using pymongo
+    CONNECTION_STRING = (
+        "mongodb+srv://crlough:wakaflocka@cluster0.cqd6b.mongodb.net/homework5db"
+    )
+
+    # Create a connection using MongoClient. You can import MongoClient or use pymongo.MongoClient
+    from pymongo import MongoClient
+
+    client = MongoClient(CONNECTION_STRING)
+
+    # Create the database for our example (we will use the same database throughout the tutorial
+    return client["hw_db"]
+
+
 def load_users(filename: str):
     """
     Opens a CSV file with user data and
@@ -40,15 +58,14 @@ def load_users(filename: str):
     - Otherwise, it returns True.
     """
     try:
-        load_dict = (pd.read_csv(filename)).to_dict(orient="records")
-        for row in load_dict:
-            new_user = socialnetwork_model.UsersTable(
-                user_id=row["USER_ID"],
-                user_name=row["NAME"],
-                user_last_name=row["LASTNAME"],
-                user_email=row["EMAIL"],
-            )
-            new_user.save()
+        db = get_database()
+        users_collection = db["users"]
+
+        load_dict = pd.read_csv(filename)  # "accounts.csv"
+        load_dict.columns = load_dict.columns.str.lower()
+        load_dict = load_dict.to_dict(orient="records")
+
+        users_collection.insert_many(load_dict)
         return load_dict
     except FileNotFoundError:
         logger.exception("NEW EXCEPTION")
@@ -68,15 +85,14 @@ def load_statuses(filename: str):
     - Otherwise, it returns True.
     """
     try:
-        load_dict = pd.read_csv(filename)
+        db = get_database()
+        status_collection = db["status_updates"]
+
+        load_dict = pd.read_csv(filename)  # "status_updates.csv"
         load_dict.columns = load_dict.columns.str.lower()
         load_dict = load_dict.to_dict(orient="records")
 
-        with socialnetwork_model.db.atomic():
-            for idx in range(0, len(load_dict), 100):
-                socialnetwork_model.StatusTable.insert_many(
-                    load_dict[idx : idx + 100]
-                ).execute()
+        status_collection.insert_many(load_dict)
         return load_dict
     except FileNotFoundError:
         logger.exception("NEW EXCEPTION")

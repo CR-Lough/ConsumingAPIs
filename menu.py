@@ -30,9 +30,6 @@ def load_status_updates():
     main.load_statuses(filename)
 
 
-# main.load_statuses(filename)
-
-
 @pysnooper.snoop()
 def add_user():
     """
@@ -155,56 +152,6 @@ def delete_status():
 
 
 @pysnooper.snoop()
-def search_all_status_updates():
-    user_id = input("User ID: ")
-    result = main.search_all_status_updates(user_id, status_collection)
-    result_gen = (row for row in result)
-    if not result:
-        print("There are no status updates for this user")
-    else:
-        print(f"There were {len(result)} status updates found for {user_id}")
-        while (
-            nxt := input(f"Would you like to see the next update? (Y/N): ").lower()
-        ) == "y":
-            try:
-                print(next(result_gen))
-            except StopIteration:
-                print("INFO: You have reached the last update. Going back to main menu")
-
-
-@pysnooper.snoop()
-def filter_status_by_string():
-    status_text = input("Status text to search: ")
-    result = main.filter_status_by_string(status_text, status_collection)
-    if not result:
-        print("There are no status updates for this text")
-    else:
-        while (
-            nxt := input(
-                "Would you like to see review the next status? (Y/N): "
-            ).lower()
-        ) == "y":
-            temp_result = next(result)
-            print(temp_result)
-            if (
-                del_stat := input(
-                    "Would you like to delete this status? (Y/N): "
-                ).lower()
-            ) == "y":
-                main.delete_status(temp_result[0][0], status_collection)
-
-
-@pysnooper.snoop()
-def flagged_status_updates():
-    status_text = input("Status text to search: ")
-    result = main.main.filter_status_by_string(status_text, status_collection)
-    if not result:
-        print("There are no status updates for this text")
-    else:
-        [print(row) for row in result]
-
-
-@pysnooper.snoop()
 def quit_program():
     """
     Quits program
@@ -214,19 +161,7 @@ def quit_program():
 
 with logger.catch(message="Because we never know..."):
     if __name__ == "__main__":
-        try:
-            os.remove("twitter.db")
-        except PermissionError:
-            socialnetwork_model.db.close()
-            os.remove("twitter.db")
-        except FileNotFoundError:
-            logger.info(
-                "twitter.db not detected. Creating new file in current directory"
-            )
 
-        db = SqliteDatabase("twitter.db")
-        db.connect()
-        main.socialnetwork_model.create_tables(db)
         user_collection = main.init_user_collection()
         status_collection = main.init_status_collection()
         menu_options = {
@@ -240,9 +175,6 @@ with logger.catch(message="Because we never know..."):
             "H": update_status,
             "I": search_status,
             "J": delete_status,
-            "K": search_all_status_updates,
-            "L": filter_status_by_string,
-            "M": flagged_status_updates,
             "Q": quit_program,
         }
         while True:
@@ -258,9 +190,6 @@ with logger.catch(message="Because we never know..."):
                                 H: Update status
                                 I: Search status
                                 J: Delete status
-                                K: Search all status updates
-                                L: Filter status by string
-                                M: Flagged status updates
                                 Q: Quit
 
                                 Please enter your choice: """

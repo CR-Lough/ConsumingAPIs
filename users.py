@@ -2,7 +2,8 @@
 Classes for user information for the social network project
 """
 # pylint: disable=R0903
-from sqlite3 import IntegrityError
+from pprint import pprint
+import main
 from loguru import logger
 
 logger.add("out_{time:YYYY.MM.DD}.log", backtrace=True, diagnose=True)
@@ -23,15 +24,15 @@ class UserCollection:
         Adds a new user to the database
         """
         try:
-            new_user = socialnetwork_model.UsersTable(
-                user_id=user_id,
-                user_email=email,
-                user_name=user_name,
-                user_last_name=user_last_name,
+            db = main.get_database()
+            db.users.insert_one(
+                {"user_id": user_id},
+                {"name": user_name},
+                {"last_name": user_last_name},
+                {"email": user_last_name},
             )
-            new_user.save()
             return True
-        except IntegrityError:
+        except NameError:
             logger.exception("NEW EXCEPTION")
             return False
 
@@ -43,16 +44,21 @@ class UserCollection:
         Modifies an existing user
         """
         try:
-            row = socialnetwork_model.UsersTable.get(
-                socialnetwork_model.UsersTable.user_id == user_id
+            db = main.get_database()
+            row = db.users.find_one({"user_id": user_id})
+            print("Found document:")
+            pprint(row)
+            result = db.users.update_one(
+                {"_id": row.get("_id")},
+                {"user_id": user_id},
+                {"name": user_name},
+                {"last_name": user_last_name},
+                {"email": user_last_name},
             )
-            row.user_email = email
-            row.user_name = user_name
-            row.user_last_name = user_last_name
-
-            row.save()
-            return True
-        except IntegrityError:
+            print("document updated to:")
+            pprint(result)
+            return result
+        except NameError:
             logger.exception("NEW EXCEPTION")
             return False
 
@@ -62,12 +68,14 @@ class UserCollection:
         Deletes an existing user
         """
         try:
-            row = socialnetwork_model.UsersTable.get(
-                socialnetwork_model.UsersTable.user_id == user_id
-            )
-            row.delete_instance()
-            return True
-        except IntegrityError:
+            db = main.get_database()
+            row = db.users.find_one({"user_id": user_id})
+            db.users.delete_one(row)
+
+            print("Deleted document:")
+            pprint(row)
+            return row
+        except NameError:
             logger.exception("NEW EXCEPTION")
             return False
 
@@ -77,10 +85,9 @@ class UserCollection:
         Searches for user data
         """
         try:
-            row = socialnetwork_model.UsersTable.get(
-                socialnetwork_model.UsersTable.user_id == user_id
-            )
+            db = main.get_database()
+            row = db.users.find_one({"user_id": user_id})
             return row
-        except IntegrityError:
+        except NameError:
             logger.exception("NEW EXCEPTION")
             return False
