@@ -36,8 +36,18 @@
 #     # items_df = pd.DataFrame(item_details)
 #     # print(items_df)
 import main
+import menu
+from cerberus import Validator
+import pandas as pd
 from pprint import pprint
 
 db = main.get_database()
-row = db.users.find_one({"user_id": "Keri.Royce8"})
-pprint(row)
+users_collection = db["users"]
+
+load_dict = pd.read_csv("accounts.csv")  # "accounts.csv"
+load_dict.columns = load_dict.columns.str.lower()
+load_dict = load_dict.to_dict(orient="records")
+user_schema = menu._user_schema()
+v = Validator()
+x = all([v.validate(row, user_schema) for row in load_dict[375:385]])
+print(x)

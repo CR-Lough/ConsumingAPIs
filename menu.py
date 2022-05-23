@@ -238,7 +238,7 @@ def _user_schema():
             "max": 999,
             "empty": False,
         },
-        "name": {"type": "string", "minlength": 1, "maxlength": 50, "empty": False},
+        "name": {"type": "string", "minlength": 1, "maxlength": 100, "empty": False},
         "lastname": {
             "type": "string",
             "minlength": 1,
@@ -249,7 +249,6 @@ def _user_schema():
             "type": "string",
             "minlength": 1,
             "maxlength": 100,
-            "regex": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$",
             "empty": False,
         },
     }

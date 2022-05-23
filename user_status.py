@@ -25,7 +25,7 @@ class UserStatusCollection:
         """
         try:
             db = main.get_database()
-            db.users.insert_one(
+            db.status_updates.insert_one(
                 {
                     "status_id": status_id,
                     "user_id": user_id,
@@ -46,10 +46,10 @@ class UserStatusCollection:
         """
         try:
             db = main.get_database()
-            row = db.users.find_one({"status_id": status_id})
+            row = db.status_updates.find_one({"status_id": status_id})
             print("Found document:")
             pprint(row)
-            result = db.users.replace_one(
+            result = db.status_updates.replace_one(
                 {"_id": row.get("_id")},
                 {
                     "status_id": status_id,
@@ -58,7 +58,7 @@ class UserStatusCollection:
                 },
             )
             print("document updated to:")
-            result = db.users.find_one({"status_id": status_id})
+            result = db.status_updates.find_one({"status_id": status_id})
             pprint(result)
             return result
         except NameError:
@@ -72,8 +72,8 @@ class UserStatusCollection:
         """
         try:
             db = main.get_database()
-            row = db.users.find_one({"status_id": status_id})
-            db.users.delete_one(row)
+            row = db.status_updates.find_one({"status_id": status_id})
+            db.status_updates.delete_one(row)
 
             print("Deleted document:")
             pprint(row)
@@ -91,7 +91,7 @@ class UserStatusCollection:
         """
         try:
             db = main.get_database()
-            row = db.users.find_one({"status_id": status_id})
+            row = db.status_updates.find_one({"status_id": status_id})
             return row
         except NameError:
             logger.exception("NEW EXCEPTION")

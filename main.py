@@ -1,9 +1,12 @@
 """
 main driver for a simple social network project
 """
+from xmlrpc.client import boolean
 import users
 import user_status
+import menu
 import pandas as pd
+from cerberus import Validator
 from loguru import logger
 
 logger.add("out_{time:YYYY.MM.DD}.log", backtrace=True, diagnose=True)
@@ -43,6 +46,38 @@ def get_database():
     return client["hw_db"]
 
 
+def validate_load_users(load_dict: list) -> bool:
+    """
+    Validate a .csv file against cerberus schema
+
+    :param filename: file that should be validated
+    :type filename: str
+    """
+    user_schema = menu._user_schema()
+    v = Validator()
+    x = all([v.validate(row, user_schema) for row in load_dict])
+    if x is not True:
+        return False
+    else:
+        return True
+
+
+def validate_load_status(load_dict: list) -> bool:
+    """
+    Validate a .csv file against cerberus schema
+
+    :param filename: file that should be validated
+    :type filename: str
+    """
+    status_schema = menu._status_schema()
+    v = Validator()
+    x = all([v.validate(row, status_schema) for row in load_dict])
+    if x is not True:
+        return False
+    else:
+        return True
+
+
 def load_users(filename: str):
     """
     Opens a CSV file with user data and
@@ -64,7 +99,9 @@ def load_users(filename: str):
         load_dict = pd.read_csv(filename)  # "accounts.csv"
         load_dict.columns = load_dict.columns.str.lower()
         load_dict = load_dict.to_dict(orient="records")
-
+        if (temp := validate_load_users(load_dict)) is not True:
+            print("This .csv has failed validation. Please try again.")
+            return False
         users_collection.insert_many(load_dict)
         return load_dict
     except FileNotFoundError:
@@ -91,7 +128,9 @@ def load_statuses(filename: str):
         load_dict = pd.read_csv(filename)  # "status_updates.csv"
         load_dict.columns = load_dict.columns.str.lower()
         load_dict = load_dict.to_dict(orient="records")
-
+        if validate_load_status(load_dict) is not True:
+            print("This .csv has failed validation. Please try again.")
+            return False
         status_collection.insert_many(load_dict)
         return load_dict
     except FileNotFoundError:
